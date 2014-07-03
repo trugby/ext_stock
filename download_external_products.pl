@@ -14,17 +14,25 @@ use common;
 ###################
 # Global variable #
 ###################
-use CONSTANT qw(
-	$TMP_DIR
-	$UPDATE_FILE
-	$IMPORT_EXT_FILE
-	$GD_FILE
-	$SHOPS_FILE
-	$LANGUAGES
-	$SHOPS
-	$CONV_SPORTDIRECT_SIZES
-	$SIZE_TITLE
-);
+#use CONSTANT qw(
+#	$SHOP_TMP_DIR
+#	$SHOP_PROD_IMG_DIR
+#	$IMPORT_EXT_PROD_FILE
+#	$IMPORT_EXT_IMG_FILE
+#	$GD_FILE
+#	$SHOPS_FILE
+#	$LANGUAGES
+#	$SHOPS
+#	$CONV_SPORTDIRECT_SIZES
+#	$SIZE_TITLE
+#);
+my ($GOOGLE_FILE)			= $CONSTANT::GD_FILE;
+my ($LANGUAGES)				= $CONSTANT::LANGUAGES;
+my ($SHOPS)					= $CONSTANT::SHOPS;
+my ($SHOP_TMP_DIR)			= $CONSTANT::SHOP_TMP_DIR;
+my ($SHOP_PROD_IMG_DIR)		= $CONSTANT::SHOP_PROD_IMG_DIR;				
+my ($IMPORT_EXT_PROD_FILE)	= $CONSTANT::IMPORT_EXT_PROD_FILE;
+my ($IMPORT_EXT_IMG_FILE)	= $CONSTANT::IMPORT_EXT_IMG_FILE;
 
 # Input parameters
 my ($intype) = $ARGV[0];
@@ -35,7 +43,7 @@ unless ( defined $infile and defined $intype ) {
 }
 else {
 	if ( $intype eq 'google' ) {
-		$infile = $CONSTANT::GD_FILE;
+		$infile = $GOOGLE_FILE;
 	}
 	else {
 		$infile = $intype;
@@ -56,10 +64,13 @@ sub main()
 	# create changed message
 	my ($e_message) = '';
 	my ($o_reports);
+	foreach my $lang (@{$LANGUAGES}) {
+		$o_reports->{$lang} = '';	
+	}	
 	
 	#load cookies
 	print "# create cookie files...\n";
-	my ($cookies) = common::save_cookies($CONSTANT::SHOPS);
+	my ($cookies) = common::save_cookies($SHOPS);
 	unless ( defined $cookies ) {
 		exit 1;
 	}	
@@ -77,24 +88,32 @@ sub main()
 		if ( scalar(@{$row}) >= 4 ) {
 			my ($i_sku) = $row->[0]; $i_sku=~ s/\"//g; $i_sku=~ s/\r//g;
 			my ($i_cat_path) = $row->[1]; $i_cat_path=~ s/\"//g; $i_cat_path=~ s/\r//g;
-			my ($i_man_path) = $row->[1]; $i_man_path=~ s/\"//g; $i_man_path=~ s/\r//g;
-			my ($i_link_en) = $row->[2]; $i_link_en=~ s/\"//g; $i_link_en=~ s/\r//g;
-			my ($i_link_es) = $row->[3]; $i_link_es=~ s/\"//g; $i_link_es=~ s/\r//g;
-			my ($i_link_pt) = $row->[4]; $i_link_en=~ s/\"//g; $i_link_en=~ s/\r//g;
+			my ($i_man_path) = $row->[2]; $i_man_path=~ s/\"//g; $i_man_path=~ s/\r//g;
+			my ($i_link_en) = $row->[3]; $i_link_en=~ s/\"//g; $i_link_en=~ s/\r//g;
+			my ($i_link_es) = $row->[4]; $i_link_es=~ s/\"//g; $i_link_es=~ s/\r//g;
+			my ($i_link_pt) = $row->[5]; $i_link_en=~ s/\"//g; $i_link_en=~ s/\r//g;
 			my ($i_prod) = {
 				'sku'				=> $i_sku,
 				'category_id'		=> $i_cat_path,
 				'manufacturer_id'	=> $i_man_path,
 				'lang'				=> {
-					$CONSTANT::LANGUAGES->[0]	=> $i_link_en,
-					$CONSTANT::LANGUAGES->[1]	=> $i_link_es,
-					$CONSTANT::LANGUAGES->[2]	=> $i_link_pt
+					$LANGUAGES->[0]	=> $i_link_en,
+					$LANGUAGES->[1]	=> $i_link_es,
+					$LANGUAGES->[2]	=> $i_link_pt
 				}
 			};
 			print "## product > \n".Dumper($i_prod)."\n";
 			
 			my ($shop_name) = 'sportsdirect';
 			if ( index($i_link_en, $shop_name) != -1 ) {
+				
+				
+				print "### prepare workspace $shop_name\n";
+				my ($tmp_dir)	= $SHOP_TMP_DIR->{$shop_name};
+				my ($prod_tmp_dir)	= $SHOP_PROD_IMG_DIR->{$shop_name};				
+				common::prepare_wspace($tmp_dir);
+				common::prepare_wspace($prod_tmp_dir);
+				
 				print "### checking $shop_name\n";
 				my ($logger,$o_report) = sportdirect::down_product($i_prod);
 #print STDERR "\n\n\n";
@@ -110,8 +129,8 @@ sub main()
 				
 				}
 				if ( defined $o_report ) {
-					foreach my $lang (@{$CONSTANT::LANGUAGES}) {
-						$o_reports->{$lang} = $o_report->{$lang};						
+					foreach my $lang (@{$LANGUAGES}) {
+						$o_reports->{$lang} .= $o_report->{$lang};						
 					}
 				}
 			}
@@ -136,22 +155,26 @@ sub main()
 	if ( defined $o_reports ) {
 		# delete old update file
 		#print "## delete old file\n";
-		#my ($rm_log) = common::rm_file($CONSTANT::UPDATE_FILE);
+		#my ($rm_log) = common::rm_file($UPDATE_EXT_FILE);
 		#unless (defined $rm_log) {
-		#	print "## ERROR: deleting $CONSTANT::UPDATE_FILE\n";
+		#	print "## ERROR: deleting $UPDATE_EXT_FILE\n";
 		#}
 		# create update file
 		print "## printing files\n";
 print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
-		my ($prt_log) = sportdirect::print_down_result($o_reports, $CONSTANT::IMPORT_EXT_FILE);
+		my ($prt_log) = sportdirect::print_down_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
 		unless (defined $prt_log) {
 			print "## ERROR: printing files\n";
+		}
+		my ($prt2_log) = sportdirect::print_down_img_result($o_reports, $IMPORT_EXT_IMG_FILE);
+		unless (defined $prt2_log) {
+			print "## ERROR: printing img files\n";
 		}
 
 		# send email
 		#print "## sending file\n";
-		#if ( -e $CONSTANT::UPDATE_FILE and (-s $CONSTANT::UPDATE_FILE > 0) ) {
-		#	common::send_email($e_message,$CONSTANT::UPDATE_FILE);
+		#if ( -e $UPDATE_EXT_FILE and (-s $UPDATE_EXT_FILE > 0) ) {
+		#	common::send_email($e_message,$UPDATE_EXT_FILE);
 		#}
 	}	
 
