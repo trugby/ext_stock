@@ -105,10 +105,9 @@ sub main()
 				
 				print "### checking $shop_name\n";
 				my ($logger,$o_report) = sportdirect::down_product($i_prod);
-print STDERR "\n\n\n";
-print STDERR "LOGGER:\n".Dumper($logger)."\n";
-print STDERR "RESULTS:\n".Dumper($o_report)."\n";
-
+#print STDERR "\n\n\n";
+#print STDERR "LOGGER:\n".Dumper($logger)."\n";
+#print STDERR "RESULTS:\n".Dumper($o_report)."\n";
 				if ( $logger->{'error'} == 1 ) {
 					print "ERROR!!! ".$logger->{'log'}."\n\n\n";
 					next; # jump to the next product
@@ -160,7 +159,7 @@ print STDERR "RESULTS:\n".Dumper($o_report)."\n";
 		}
 		# create update file
 		print "## printing files\n";
-print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
+#print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
 		my ($import_prod_files) = sportdirect::print_down_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
 		unless (defined $import_prod_files and ($import_prod_files ne '') ) {
 			print "ERROR!!! Printing files\n";
