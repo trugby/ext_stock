@@ -409,7 +409,7 @@ sub down_prod_img(\$)
 					my ($link) = $images->{$ty};
 					my ($n) = $link; if ( $link =~ /\/([^\/]*)$/m ) { $n = $1 };
 					my ($output) = $PRODUCT_IMG_DIR."/".$n;
-					#$output = www_get($link, $output);
+					$output = www_get($link, $output);
 					if (defined $output ) {
 						$rep->{$ty} = $n;
 					}
