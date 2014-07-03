@@ -21,7 +21,6 @@ my ($SHOPS)					= $CONSTANT::SHOPS;
 my ($SHOP_TMP_DIR)			= $CONSTANT::SHOP_TMP_DIR;
 my ($SHOP_PROD_IMG_DIR)		= $CONSTANT::SHOP_PROD_IMG_DIR;				
 my ($IMPORT_EXT_PROD_FILE)	= $CONSTANT::IMPORT_EXT_PROD_FILE;
-my ($IMPORT_EXT_IMG_FILE)	= $CONSTANT::IMPORT_EXT_IMG_FILE;
 
 # Input parameters
 my ($intype) = $ARGV[0];
@@ -118,11 +117,6 @@ sub main()
 				}
 				if ( defined $o_report ) {
 					foreach my $lang (@{$LANGUAGES}) {
-						if ( $lang eq $MAIN_LANG ) {
-							if ( exists $o_report->{'images'} ) {
-								$o_reports->{'images'} .= $o_report->{'images'};								
-							}
-						}
 						$o_reports->{$lang} .= $o_report->{$lang};						
 					}
 				}
@@ -147,16 +141,6 @@ sub main()
 	#create stock report
 	if ( defined $o_reports ) {
 		
-		# delete old update file
-		print "## delete old file\n";
-		my ($rm_log) = common::rm_file($IMPORT_EXT_PROD_FILE);
-		unless (defined $rm_log) {
-			print "ERROR!!! Deleting $IMPORT_EXT_PROD_FILE\n";
-		}
-		my ($rm2_log) = common::rm_file($IMPORT_EXT_IMG_FILE);
-		unless (defined $rm2_log) {
-			print "ERROR!!! Deleting $IMPORT_EXT_IMG_FILE\n";
-		}
 		# create update file
 		print "## printing files\n";
 #print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
@@ -164,13 +148,8 @@ sub main()
 		unless (defined $import_prod_files and ($import_prod_files ne '') ) {
 			print "ERROR!!! Printing files\n";
 		}
-		my ($import_img_files) = sportdirect::print_down_img_result($o_reports, $IMPORT_EXT_IMG_FILE);
-		unless (defined $import_img_files and ($import_img_files ne '') ) {
-			print "ERROR!!! Printing img files\n";
-		}
-
 		# send email
-		my ($import_files) = join(';',$import_prod_files,$import_img_files);
+		my ($import_files) = join(';',$import_prod_files);
 		print "## sending files: $import_files\n";
 		if ( defined $import_files ) {
 			common::send_email($e_message, $import_files);

@@ -16,15 +16,16 @@ use vars qw(
 
 	$TMP_DIR
 	$PRODUCT_IMG_DIR
+	$PRODUCT_IMG_PATH
 	
 	$UPDATE_EXT_FILE
 	$IMPORT_EXT_PROD_FILE
-	$IMPORT_EXT_IMG_FILE
 	
 	$SHOPS
 	$SHOP_COOKIES
 	$SHOP_TMP_DIR
 	$SHOP_PROD_IMG_DIR
+	$SHOP_PROD_IMG_PATH
 	$SHOP_CONV_SIZES
 	
 	$SIZE_TITLE
@@ -46,10 +47,10 @@ $LANGUAGES			= ['en','es','pt'];
 #$PRODUCT_IMG_DIR 	= '/kunden/homepages/24/d406245370/htdocs/images/stories/virtuemart/product';
 $TMP_DIR			= '/Users/jmrodriguez/tmp';
 $PRODUCT_IMG_DIR 	= '/Users/jmrodriguez/tmp';
+$PRODUCT_IMG_PATH 	= 'images/stories/virtuemart/product';
 
 $UPDATE_EXT_FILE		= $TMP_DIR.'/UpdateExternalStock.csv';
 $IMPORT_EXT_PROD_FILE	= $TMP_DIR.'/ImportExternalStock__LANG__.csv';
-$IMPORT_EXT_IMG_FILE	= $TMP_DIR.'/ImportIMGExternalStock.csv';
 
 $SHOPS 				= {
 	'sportsdirect' => {
@@ -70,6 +71,10 @@ $SHOP_TMP_DIR	= {
 $SHOP_PROD_IMG_DIR	= {
 	'sportsdirect' => $PRODUCT_IMG_DIR.'/sportsdirect',
 	'lovell-rugby' => $PRODUCT_IMG_DIR.'/lovell-rugby',
+};
+$SHOP_PROD_IMG_PATH	= {
+	'sportsdirect' => $PRODUCT_IMG_PATH.'/sportsdirect',
+	'lovell-rugby' => $PRODUCT_IMG_PATH.'/lovell-rugby',
 };
 $SHOP_CONV_SIZES	= {
 	'sportsdirect' => {

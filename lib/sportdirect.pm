@@ -13,13 +13,14 @@ use common;
 ###################
 # Global variable #
 ###################
-my ($COOKIES)			= $CONSTANT::SHOP_COOKIES->{'sportsdirect'};
-my ($TMP_DIR)			= $CONSTANT::SHOP_TMP_DIR->{'sportsdirect'};
-my ($PRODUCT_IMG_DIR)	= $CONSTANT::SHOP_PROD_IMG_DIR->{'sportsdirect'};
-my ($CONV_SIZES)		= $CONSTANT::SHOP_CONV_SIZES->{'sportsdirect'};
-my ($SIZE_TITLE)		= $CONSTANT::SIZE_TITLE;
-my ($PROD_AVAIL)		= $CONSTANT::PROD_AVAILABILITY;
-my ($MAIN_LANG)			= $CONSTANT::MAIN_LANG;
+my ($COOKIES)				= $CONSTANT::SHOP_COOKIES->{'sportsdirect'};
+my ($TMP_DIR)				= $CONSTANT::SHOP_TMP_DIR->{'sportsdirect'};
+my ($PRODUCT_IMG_DIR)		= $CONSTANT::SHOP_PROD_IMG_DIR->{'sportsdirect'};
+my ($SHOP_PROD_IMG_PATH)	= $CONSTANT::SHOP_PROD_IMG_PATH->{'sportsdirect'};
+my ($CONV_SIZES)			= $CONSTANT::SHOP_CONV_SIZES->{'sportsdirect'};
+my ($SIZE_TITLE)			= $CONSTANT::SIZE_TITLE;
+my ($PROD_AVAIL)			= $CONSTANT::PROD_AVAILABILITY;
+my ($MAIN_LANG)				= $CONSTANT::MAIN_LANG;
 
 
 #####################
@@ -223,20 +224,20 @@ sub down_product($)
 				}
 			}
 			
-			# create report rst
-			if ( $logger->{'error'} == 0 ) {
-				if ( $lang eq $MAIN_LANG ) {
-					my ($txt) = print_down_img($o_report);
-					if ( defined $txt ) {
-						$results->{'images'} = $txt;
-					}
-					else {
-						$logger->{'error'} 	= 1;
-						$logger->{'log'}	= "Printing images";
-						return $logger;
-					}
-				}
-			}
+#			# create report rst
+#			if ( $logger->{'error'} == 0 ) {
+#				if ( $lang eq $MAIN_LANG ) {
+#					my ($txt) = print_down_img($o_report);
+#					if ( defined $txt ) {
+#						$results->{'images'} = $txt;
+#					}
+#					else {
+#						$logger->{'error'} 	= 1;
+#						$logger->{'log'}	= "Printing images";
+#						return $logger;
+#					}
+#				}
+#			}
 
 			# delete downloaded file
 			my ($rm_log) = common::rm_file($output);
@@ -430,6 +431,7 @@ sub print_down_prod($$)
 	my ($published) = '0';
 	my ($sku) = '';
 	my ($name) = '';
+	my ($slug) = '';
 	my ($s_desc) = '';
 	my ($desc) = '';
 	my ($manufacter) = '';
@@ -438,6 +440,10 @@ sub print_down_prod($$)
 	my ($availability) = '';
 	my ($cust_title) = '';
 	my ($cust_val) = '';
+	my ($cust_order) = '';
+	my ($img_names) = '';
+	my ($img_paths) = '';
+	my ($img_order) = '';
 	my ($intnotes) = '';
 	
 	if ( exists $o_report->{'sku'} and defined $o_report->{'sku'} and ($o_report->{'sku'} ne '') ) {
@@ -450,6 +456,15 @@ sub print_down_prod($$)
 	}
 	else { return undef } # required field
 	
+	if ( ($sku ne '') and ($name ne '') ) {
+		$slug = lc($name); $slug =~ s/\s+/\-/g;
+		if ( $sku =~ /\/([\d|\w]*)$/ ) {
+			$slug .= "-".$1;
+		}
+		else { return undef } # required field
+	}
+	else { return undef } # required field
+
 	if ( exists $o_report->{'s_desc'} and defined $o_report->{'s_desc'} and ($o_report->{'s_desc'} ne '') ) {
 		$s_desc = $o_report->{'s_desc'};
 		$s_desc =~ s/"/'/g;
@@ -459,52 +474,81 @@ sub print_down_prod($$)
 		$desc = $o_report->{'description'};
 		$desc =~ s/"/'/g;
 	}
-	
-	#if ( exists $o_report->{'manufacter'} and defined $o_report->{'manufacter'} and ($o_report->{'manufacter'} ne '') ) {
-	#	$manufacter = $o_report->{'manufacter'};
-	#}
-	if ( exists $o_report->{'manufacturer_id'} and defined $o_report->{'manufacturer_id'} and ($o_report->{'manufacturer_id'} ne '') ) {
-		$manufacter = $o_report->{'manufacturer_id'};
-	}
-	
-	if ( exists $o_report->{'price'} and defined $o_report->{'price'} and ($o_report->{'price'} ne '') ) {
-		$price = $o_report->{'price'};
-	}
-	else { return undef } # required field
-	
-	if ( exists $o_report->{'category_id'} and defined $o_report->{'category_id'} and ($o_report->{'category_id'} ne '') ) {
-		$categories = $o_report->{'category_id'};
-	}
-	#else { return undef } # required field
-	
-	if ( defined $PROD_AVAIL ) {
-		$availability = $PROD_AVAIL;
-	}
-	
-	if ( exists $o_report->{'sizes'} and defined $o_report->{'sizes'} and (scalar(@{$o_report->{'sizes'}}) > 0) ) {		
-		foreach my $sizes (@{$o_report->{'sizes'}}) {
-			if ( defined $sizes and ($sizes ne '') ) {
-				$cust_title .= $SIZE_TITLE.'~';
-				$cust_val .= $sizes.'~';				
+			
+	if ( $lang eq $MAIN_LANG ) {
+
+		#if ( exists $o_report->{'manufacter'} and defined $o_report->{'manufacter'} and ($o_report->{'manufacter'} ne '') ) {
+		#	$manufacter = $o_report->{'manufacter'};
+		#}
+		if ( exists $o_report->{'manufacturer_id'} and defined $o_report->{'manufacturer_id'} and ($o_report->{'manufacturer_id'} ne '') ) {
+			$manufacter = $o_report->{'manufacturer_id'};
+		}
+		
+		if ( exists $o_report->{'price'} and defined $o_report->{'price'} and ($o_report->{'price'} ne '') ) {
+			$price = $o_report->{'price'};
+		}
+		else { return undef } # required field
+		
+		if ( exists $o_report->{'category_id'} and defined $o_report->{'category_id'} and ($o_report->{'category_id'} ne '') ) {
+			$categories = $o_report->{'category_id'};
+		}
+		#else { return undef } # required field
+		
+		if ( defined $PROD_AVAIL ) {
+			$availability = $PROD_AVAIL;
+		}		
+		
+		if ( exists $o_report->{'sizes'} and defined $o_report->{'sizes'} and (scalar(@{$o_report->{'sizes'}}) > 0) ) {		
+			for (my $i = 0; $i < scalar(@{$o_report->{'sizes'}}); $i++) {
+				my ($sizes) = $o_report->{'sizes'}->[$i];
+				if ( defined $sizes and ($sizes ne '') ) {
+					$cust_title .= $SIZE_TITLE.'~';
+					$cust_val .= $sizes.'~';
+					my ($num) = $i+1;
+					$cust_order .= $num.'|';
+				}
+			}
+			$cust_title =~ s/\~$//g;
+			$cust_val =~ s/\~$//g;
+			$cust_order =~ s/\|$//g;
+		}
+		else { return undef } # required field
+
+		if ( exists $o_report->{'images'} and defined $o_report->{'images'} and (scalar(@{$o_report->{'images'}}) > 0) ) {		
+			#foreach my $images (@{$o_report->{'images'}}) {
+			for (my $i = 0; $i < scalar(@{$o_report->{'images'}}); $i++) {
+				my ($images) = $o_report->{'images'}->[$i];
+				#foreach my $ty ('l','xxl') {
+				foreach my $ty ('l') {
+					if ( exists $images->{$ty} ) {					
+						my ($img) = $images->{$ty};
+						if ( defined $img and ($img ne '') ) {
+							$img_names .= $name.'|';
+							$img_paths .= $SHOP_PROD_IMG_PATH.'/'.$img.'|';
+							my ($num) = $i+1;
+							$img_order .= $num.'|';
+						}			
+					}
+				}			
+			}
+			$img_names =~ s/\|$//g;
+			$img_paths =~ s/\|$//g;
+			$img_order =~ s/\|$//g;
+		}
+		else { return undef } # required field
+			
+		if ( exists $o_report->{'link'} and defined $o_report->{'link'} and ($o_report->{'link'} ne '') ) {
+			if ( defined $lang and ($lang eq $MAIN_LANG) ) { # only for main lang 'EN'
+				$intnotes = $o_report->{'link'};
 			}
 		}
-		$cust_title =~ s/\~$//g;
-		$cust_val =~ s/\~$//g;
+		else { return undef } # required field
 	}
-	else { return undef } # required field
-	
-	
-	if ( exists $o_report->{'link'} and defined $o_report->{'link'} and ($o_report->{'link'} ne '') ) {
-		if ( defined $lang and ($lang eq $MAIN_LANG) ) { # only for main lang 'EN'
-			$intnotes = $o_report->{'link'};
-		}
-	}
-	else { return undef } # required field
-	
 	
 	my ($result) = 	'"'.$published.'",'.
 					'"'.$sku.'",'.
 					'"'.$name.'",'.
+					'"'.$slug.'",'.
 					'"'.$s_desc.'",'.
 					'"'.$desc.'",'.
 					'"'.$manufacter.'",'.
@@ -513,50 +557,14 @@ sub print_down_prod($$)
 					'"'.$availability.'",'.
 					'"'.$cust_title.'",'.
 					'"'.$cust_val.'",'.
+					'"'.$cust_order.'",'.
+					'"'.$img_names.'",'.
+					'"'.$img_paths.'",'.
+					'"'.$img_order.'",'.					
 					'"'.$intnotes.'"'."\n";
 	return $result;
 	
 } # end print_down_prod
-
-sub print_down_img($)
-{
-	my ($o_report) = @_;
-	my ($sku) = '';
-	my ($name) = '';
-	my ($img_path) = '';
-
-	if ( exists $o_report->{'sku'} and defined $o_report->{'sku'} and ($o_report->{'sku'} ne '') ) {
-		$sku = $o_report->{'sku'};
-	}
-	else { return undef } # required field
-	
-	if ( exists $o_report->{'name'} and defined $o_report->{'name'} and ($o_report->{'name'} ne '') ) {
-		$name = $o_report->{'name'};
-	}
-	else { return undef } # required field
-	
-	if ( exists $o_report->{'images'} and defined $o_report->{'images'} and (scalar(@{$o_report->{'images'}}) > 0) ) {		
-		foreach my $images (@{$o_report->{'images'}}) {
-			foreach my $ty ('l','xxl') {				
-				if ( exists $images->{$ty} ) {					
-					my ($img) = $images->{$ty};
-					if ( defined $img and ($img ne '') ) {
-						$img_path .= $PRODUCT_IMG_DIR.'/'.$img.'|';
-					}			
-				}
-			}			
-		}
-		$img_path =~ s/\|$//g;
-	}
-	else { return undef } # required field
-	
-	my ($result) = 	'"'.$sku.'",'.
-					'"'.$name.'",'.
-					'"'.$img_path.'"'."\n";
-				
-	return $result;
-	
-} # end print_down_img
 
 sub print_down_prod_result($$)
 {
@@ -567,6 +575,12 @@ sub print_down_prod_result($$)
 		my ($langfile) = $corefile;
 		my ($lan) = uc($lang);
 		$langfile =~ s/__LANG__/_$lan/;
+
+		my ($rm_log) = common::rm_file($langfile);
+		unless (defined $rm_log) {
+			print "ERROR!!! Deleting old file: $langfile\n";
+		}
+		
 		common::print_file($result_txt, $langfile);
 		$files .= $langfile.';';
 	}
@@ -575,24 +589,5 @@ sub print_down_prod_result($$)
 	return $files
 	
 } # end print_down_prod_result
-
-sub print_down_img_result($$)
-{
-	my ($results, $corefile) = @_;
-	my ($files) = '';
-	
-	if ( exists $results->{'images'} and defined $results->{'images'} and ($results->{'images'} ne '') ) {
-		my ($result_txt) = $results->{'images'};
-		my ($langfile) = $corefile;
-		common::print_file($result_txt, $langfile);
-		$files .= $langfile.';';			
-	}
-	$files =~ s/\;$//g;
-	
-	return $files
-	
-	
-} # end print_down_img_result
-
 
 1;
