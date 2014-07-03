@@ -8,6 +8,7 @@ use vars qw(
 	$EMAILS_TO
 	$EMAILS_CC
 	$EMAILS_SUBJECT
+	
 	$GD_FILE
 	
 	$MAIN_LANG
@@ -35,7 +36,9 @@ $EMAILS_FROM		= 'admin@thinkingrugby.com';
 $EMAILS_TO			= 'thinkingrugby@gmail.com';
 $EMAILS_CC			= 'josemrc@gmail.com';
 $EMAILS_SUBJECT		= '[InSiS Checking Stock]';
+
 $GD_FILE			= 'https://docs.google.com/uc?id=0Bw3YSiAszMkTaGpza1VLVEQzUzA&export=download';
+
 $MAIN_LANG			= 'en';
 $LANGUAGES			= ['en','es','pt'];
 

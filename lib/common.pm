@@ -8,6 +8,7 @@ use MIME::Lite;
 use Exporter;
 use FindBin;
 use lib "$FindBin::Bin";
+use CONSTANT;
 
 use vars qw(@ISA @EXPORT);
 
@@ -26,13 +27,11 @@ use vars qw(@ISA @EXPORT);
 ###################
 # Global variable #
 ###################
-use CONSTANT qw(
-	$EMAILS_FROM
-	$EMAILS_TO
-	$EMAILS_CC
-	$EMAILS_SUBJECT
-	$SHOP_COOKIES
-);
+my ($SHOP_COOKIES)		= $CONSTANT::SHOP_COOKIES;
+my ($EMAILS_FROM)		= $CONSTANT::EMAILS_FROM;
+my ($EMAILS_TO)			= $CONSTANT::EMAILS_TO;
+my ($EMAILS_SUBJECT)	= $CONSTANT::EMAILS_SUBJECT;
+
 
 #####################
 # Method prototypes #
@@ -134,8 +133,8 @@ sub save_cookies($)
 	#foreach my $shop (@{$inshops}) {
 	while (my ($shop_name, $shop_report) = each (%{$inshops}) ) {
 		my ($shop_link) = $shop_report->{'link'};
-		if ( exists $CONSTANT::SHOP_COOKIES->{$shop_name} ) {
-			my ($cookie_file) = $CONSTANT::SHOP_COOKIES->{$shop_name};
+		if ( exists $SHOP_COOKIES->{$shop_name} ) {
+			my ($cookie_file) = $SHOP_COOKIES->{$shop_name};
 			my ($cmd) = "wget --save-cookies $cookie_file -O - -U \"Mozilla/5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.205 Safari/534.16\" $shop_link &> /dev/null";
 			print "## $cmd\n";
 			eval {
@@ -153,14 +152,14 @@ sub save_cookies($)
 
 sub send_email($$)
 {
-	my ($txt,$file) = @_;
+	my ($txt, $files) = @_;
 
 	# Part using which the attachment is sent to an email #
 	my ($text) = "Message control:\n\n".$txt;
 	my ($msg) = MIME::Lite->new(
-        From     	=> $CONSTANT::EMAILS_FROM,
-        To 			=> $CONSTANT::EMAILS_TO,
-        Subject 	=> $CONSTANT::EMAILS_SUBJECT,
+        From     	=> $EMAILS_FROM,
+        To 			=> $EMAILS_TO,
+        Subject 	=> $EMAILS_SUBJECT,
 		Type		=> 'multipart/mixed',
 	);
 	$msg->attach(
@@ -168,11 +167,13 @@ sub send_email($$)
 		Encoding 	=> 'quoted-printable',
 		Data    	=> $text,
 	);
-	$msg->attach(
-		Type    	 => 'text/plain',
-		Path    	 => $file,
-		Disposition	=> 'attachment'
-	);
+	foreach my $file (split(';', $files)) {
+		$msg->attach(
+			Type    	 => 'text/plain',
+			Path    	 => $file,
+			Disposition	=> 'attachment'
+		);		
+	}
 	$msg->send;
 
 	# DEPRECATED:

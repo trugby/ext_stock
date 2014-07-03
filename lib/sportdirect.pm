@@ -7,19 +7,12 @@ use FindBin;
 use Data::Dumper;
 use FindBin;
 use lib "$FindBin::Bin";
+use CONSTANT;
 use common;
 
 ###################
 # Global variable #
 ###################
-#use CONSTANT qw(
-#	$SHOP_COOKIES
-#	$SHOP_TMP_DIR
-#	$SHOP_PROD_IMG_DIR
-#	$SHOP_CONV_SIZES
-#	$SIZE_TITLE
-#	$PROD_AVAILABILITY
-#);
 my ($COOKIES)			= $CONSTANT::SHOP_COOKIES->{'sportsdirect'};
 my ($TMP_DIR)			= $CONSTANT::SHOP_TMP_DIR->{'sportsdirect'};
 my ($PRODUCT_IMG_DIR)	= $CONSTANT::SHOP_PROD_IMG_DIR->{'sportsdirect'};
@@ -216,14 +209,10 @@ sub down_product($)
 			if ( exists $o_report->{'link_img'} and ($lang eq $MAIN_LANG) ) {
 				$logger = down_prod_img($o_report);
 			}
-
-print STDERR "O_REPORT:$lang\n".Dumper($o_report)."\n";
-
+			
 			# create report rst
 			if ( $logger->{'error'} == 0 ) {
-print STDERR "REP_TXT:$lang\n";
 				my ($txt) = print_down_prod($lang, $o_report);
-print STDERR "$txt\n";
 				if ( defined $txt ) {
 					$results->{$lang} = $txt;
 				}
@@ -237,11 +226,9 @@ print STDERR "$txt\n";
 			# create report rst
 			if ( $logger->{'error'} == 0 ) {
 				if ( $lang eq $MAIN_LANG ) {
-print STDERR "IMG_TXT:$lang\n";
 					my ($txt) = print_down_img($o_report);
-print STDERR "$txt\n";
 					if ( defined $txt ) {
-						$results->{$lang} = $txt;
+						$results->{'images'} = $txt;
 					}
 					else {
 						$logger->{'error'} 	= 1;
@@ -574,26 +561,36 @@ sub print_down_img($)
 sub print_down_prod_result($$)
 {
 	my ($results, $corefile) = @_;
+	my ($files) = '';
 	
 	while (my ($lang, $result_txt) = each(%{$results}) ) {
 		my ($langfile) = $corefile;
 		my ($lan) = uc($lang);
 		$langfile =~ s/__LANG__/_$lan/;
 		common::print_file($result_txt, $langfile);
+		$files .= $langfile.';';
 	}
+	$files =~ s/\;$//g;
+	
+	return $files
 	
 } # end print_down_prod_result
 
 sub print_down_img_result($$)
 {
 	my ($results, $corefile) = @_;
+	my ($files) = '';
 	
-	while (my ($lang, $result_txt) = each(%{$results}) ) {
-		if ( $lang eq $MAIN_LANG ) {
-			my ($langfile) = $corefile;
-			common::print_file($result_txt, $langfile);			
-		}
+	if ( exists $results->{'images'} and defined $results->{'images'} and ($results->{'images'} ne '') ) {
+		my ($result_txt) = $results->{'images'};
+		my ($langfile) = $corefile;
+		common::print_file($result_txt, $langfile);
+		$files .= $langfile.';';			
 	}
+	$files =~ s/\;$//g;
+	
+	return $files
+	
 	
 } # end print_down_img_result
 

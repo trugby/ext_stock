@@ -6,27 +6,16 @@ use Text::CSV;
 use Data::Dumper;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+use CONSTANT;
+use common;
 use sportdirect;
 #use lovellrugby;
-use constant;
-use common;
 
 ###################
 # Global variable #
 ###################
-#use CONSTANT qw(
-#	$SHOP_TMP_DIR
-#	$SHOP_PROD_IMG_DIR
-#	$IMPORT_EXT_PROD_FILE
-#	$IMPORT_EXT_IMG_FILE
-#	$GD_FILE
-#	$SHOPS_FILE
-#	$LANGUAGES
-#	$SHOPS
-#	$CONV_SPORTDIRECT_SIZES
-#	$SIZE_TITLE
-#);
 my ($GOOGLE_FILE)			= $CONSTANT::GD_FILE;
+my ($MAIN_LANG)				= $CONSTANT::MAIN_LANG;
 my ($LANGUAGES)				= $CONSTANT::LANGUAGES;
 my ($SHOPS)					= $CONSTANT::SHOPS;
 my ($SHOP_TMP_DIR)			= $CONSTANT::SHOP_TMP_DIR;
@@ -116,9 +105,9 @@ sub main()
 				
 				print "### checking $shop_name\n";
 				my ($logger,$o_report) = sportdirect::down_product($i_prod);
-#print STDERR "\n\n\n";
-#print STDERR "LOGGER:\n".Dumper($logger)."\n";
-#print STDERR "RESULTS:\n".Dumper($o_report)."\n";
+print STDERR "\n\n\n";
+print STDERR "LOGGER:\n".Dumper($logger)."\n";
+print STDERR "RESULTS:\n".Dumper($o_report)."\n";
 
 				if ( $logger->{'error'} == 1 ) {
 					print "ERROR!!! ".$logger->{'log'}."\n\n\n";
@@ -130,6 +119,11 @@ sub main()
 				}
 				if ( defined $o_report ) {
 					foreach my $lang (@{$LANGUAGES}) {
+						if ( $lang eq $MAIN_LANG ) {
+							if ( exists $o_report->{'images'} ) {
+								$o_reports->{'images'} .= $o_report->{'images'};								
+							}
+						}
 						$o_reports->{$lang} .= $o_report->{$lang};						
 					}
 				}
@@ -153,29 +147,35 @@ sub main()
 	
 	#create stock report
 	if ( defined $o_reports ) {
+		
 		# delete old update file
-		#print "## delete old file\n";
-		#my ($rm_log) = common::rm_file($UPDATE_EXT_FILE);
-		#unless (defined $rm_log) {
-		#	print "## ERROR: deleting $UPDATE_EXT_FILE\n";
-		#}
+		print "## delete old file\n";
+		my ($rm_log) = common::rm_file($IMPORT_EXT_PROD_FILE);
+		unless (defined $rm_log) {
+			print "ERROR!!! Deleting $IMPORT_EXT_PROD_FILE\n";
+		}
+		my ($rm2_log) = common::rm_file($IMPORT_EXT_IMG_FILE);
+		unless (defined $rm2_log) {
+			print "ERROR!!! Deleting $IMPORT_EXT_IMG_FILE\n";
+		}
 		# create update file
 		print "## printing files\n";
 print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
-		my ($prt_log) = sportdirect::print_down_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
-		unless (defined $prt_log) {
-			print "## ERROR: printing files\n";
+		my ($import_prod_files) = sportdirect::print_down_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
+		unless (defined $import_prod_files and ($import_prod_files ne '') ) {
+			print "ERROR!!! Printing files\n";
 		}
-		my ($prt2_log) = sportdirect::print_down_img_result($o_reports, $IMPORT_EXT_IMG_FILE);
-		unless (defined $prt2_log) {
-			print "## ERROR: printing img files\n";
+		my ($import_img_files) = sportdirect::print_down_img_result($o_reports, $IMPORT_EXT_IMG_FILE);
+		unless (defined $import_img_files and ($import_img_files ne '') ) {
+			print "ERROR!!! Printing img files\n";
 		}
 
 		# send email
-		#print "## sending file\n";
-		#if ( -e $UPDATE_EXT_FILE and (-s $UPDATE_EXT_FILE > 0) ) {
-		#	common::send_email($e_message,$UPDATE_EXT_FILE);
-		#}
+		my ($import_files) = join(';',$import_prod_files,$import_img_files);
+		print "## sending files: $import_files\n";
+		if ( defined $import_files ) {
+			common::send_email($e_message, $import_files);
+		}
 	}	
 
 	exit 0;
