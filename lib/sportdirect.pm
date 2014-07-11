@@ -32,9 +32,7 @@ sub down_product($);
 sub down_prod_wscan($\$);
 sub down_prod_img(\$);
 sub print_down_prod($$);
-sub print_down_img($);
 sub print_down_prod_result($$);
-sub print_down_img_result($$);
 
 
 #################
@@ -224,20 +222,7 @@ sub down_product($)
 				}
 			}
 			
-#			# create report rst
-#			if ( $logger->{'error'} == 0 ) {
-#				if ( $lang eq $MAIN_LANG ) {
-#					my ($txt) = print_down_img($o_report);
-#					if ( defined $txt ) {
-#						$results->{'images'} = $txt;
-#					}
-#					else {
-#						$logger->{'error'} 	= 1;
-#						$logger->{'log'}	= "Printing images";
-#						return $logger;
-#					}
-#				}
-#			}
+print STDERR "REPORT: \n".Dumper($o_report)."\n";
 
 			# delete downloaded file
 			my ($rm_log) = common::rm_file($output);
@@ -330,7 +315,7 @@ sub down_prod_wscan($\$)
 		my ($o_sizes);		
 		for my $node ($doc->findnodes('//select[@id="sizeDdl"]')) {
 			for my $node2 ($node->findnodes('option[@value]')) {
-				unless ( $node2->hasAttribute('selected') ) {
+				unless ( $node2->hasAttribute('selected') or $node2->hasAttribute('class') ) {
 					my ($text) = $node2->getAttribute('value');
 					$text =~ s/\s*//g; $text = lc($text);
 					if ( exists $CONV_SIZES->{$text} ) {
@@ -362,7 +347,7 @@ sub down_prod_wscan($\$)
 			$logger->{'error'} 	= 1;
 			$logger->{'log'}	= "We don't find the product price";
 			return $logger;
-		}			
+		}
 		
 		# download images
 		my ($o_images);		
