@@ -14,6 +14,7 @@ use vars qw(
 	$MAIN_LANG
 	$LANGUAGES
 
+	$DATA_DIR
 	$TMP_DIR
 	$PRODUCT_IMG_DIR
 	$PRODUCT_IMG_PATH
@@ -43,14 +44,16 @@ $GD_FILE			= 'https://docs.google.com/uc?id=0Bw3YSiAszMkTaGpza1VLVEQzUzA&export=
 $MAIN_LANG			= 'en';
 $LANGUAGES			= ['en','es','pt'];
 
+#$DATA_DIR			= '/kunden/homepages/24/d406245370/htdocs/data/stock';
 #$TMP_DIR			= '/kunden/homepages/24/d406245370/htdocs/tmp/external_stock';
 #$PRODUCT_IMG_DIR 	= '/kunden/homepages/24/d406245370/htdocs/images/stories/virtuemart/product';
+$DATA_DIR			= '/Users/jmrodriguez/tmp';
 $TMP_DIR			= '/Users/jmrodriguez/tmp';
 $PRODUCT_IMG_DIR 	= '/Users/jmrodriguez/tmp';
 $PRODUCT_IMG_PATH 	= 'images/stories/virtuemart/product';
 
-$UPDATE_EXT_FILE		= $TMP_DIR.'/UpdateExternalStock.csv';
-$IMPORT_EXT_PROD_FILE	= $TMP_DIR.'/ImportExternalStock__LANG__.csv';
+$UPDATE_EXT_FILE		= $DATA_DIR.'/UpdateExternalStock.csv';
+$IMPORT_EXT_PROD_FILE	= $DATA_DIR.'/ImportExternalStock__LANG__.csv';
 
 $SHOPS 				= {
 	'sportsdirect' => {
