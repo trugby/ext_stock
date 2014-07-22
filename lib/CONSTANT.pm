@@ -14,13 +14,21 @@ use vars qw(
 	$MAIN_LANG
 	$LANGUAGES
 
+	$SCRIPT_DIR
 	$DATA_DIR
 	$TMP_DIR
 	$PRODUCT_IMG_DIR
 	$PRODUCT_IMG_PATH
 	
+	$INIT_EXT_FILE
 	$UPDATE_EXT_FILE
 	$IMPORT_EXT_PROD_FILE
+	$EXPORT_PRICESIZESTOCK_PROD_FILE
+	$IMPORT_PRICESIZESTOCK_PROD_FILE
+	
+	$DOWNN_SCRIPT_FILE
+	$CHECK_SCRIPT_FILE
+	$CSVI_CRON_FILE
 	
 	$SHOPS
 	$SHOP_COOKIES
@@ -44,16 +52,29 @@ $GD_FILE			= 'https://docs.google.com/uc?id=0Bw3YSiAszMkTaGpza1VLVEQzUzA&export=
 $MAIN_LANG			= 'en';
 $LANGUAGES			= ['en','es','pt'];
 
+#$SCRIPT_DIR			= '/kunden/homepages/24/d406245370/htdocs/scripts/ext_stock';
 #$DATA_DIR			= '/kunden/homepages/24/d406245370/htdocs/data/stock';
 #$TMP_DIR			= '/kunden/homepages/24/d406245370/htdocs/tmp/external_stock';
 #$PRODUCT_IMG_DIR 	= '/kunden/homepages/24/d406245370/htdocs/images/stories/virtuemart/product';
+$SCRIPT_DIR			= '/Users/jmrodriguez/Google\ Drive/Stock/ext_stock';
 $DATA_DIR			= '/Users/jmrodriguez/tmp';
 $TMP_DIR			= '/Users/jmrodriguez/tmp';
 $PRODUCT_IMG_DIR 	= '/Users/jmrodriguez/tmp';
 $PRODUCT_IMG_PATH 	= 'images/stories/virtuemart/product';
 
+$INIT_EXT_FILE			= $DATA_DIR.'/../initExtStock.csv';
 $UPDATE_EXT_FILE		= $DATA_DIR.'/UpdateExternalStock.csv';
 $IMPORT_EXT_PROD_FILE	= $DATA_DIR.'/ImportExternalStock__LANG__.csv';
+$EXPORT_PRICESIZESTOCK_PROD_FILE	= $DATA_DIR.'/ExportPriceSizeStockProducts.csv';
+$IMPORT_PRICESIZESTOCK_PROD_FILE	= $DATA_DIR.'/ImportPriceSizeStockProducts.csv';
+
+$DOWNN_SCRIPT_FILE		= $SCRIPT_DIR.'/download_external_products.pl';
+$CHECK_SCRIPT_FILE		= $SCRIPT_DIR.'/check_external_stock.pl';
+$CSVI_CRON_FILE			= '/kunden/homepages/24/d406245370/htdocs/dev/administrator/components/com_csvi/helpers/cron.php';
+
+############################
+# GLOBAL VARIABLES OF SHOP #
+############################
 
 $SHOPS 				= {
 	'sportsdirect' => {

@@ -490,12 +490,12 @@ sub print_down_prod($$)
 					$cust_title .= $SIZE_TITLE.'~';
 					$cust_val .= $sizes.'~';
 					my ($num) = $i+1;
-					$cust_order .= $num.'|';
+					$cust_order .= $num.'~';
 				}
 			}
 			$cust_title =~ s/\~$//g;
 			$cust_val =~ s/\~$//g;
-			$cust_order =~ s/\|$//g;
+			$cust_order =~ s/\~$//g;
 		}
 		else { return undef } # required field
 

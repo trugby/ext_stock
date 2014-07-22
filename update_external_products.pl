@@ -11,6 +11,10 @@ use common;
 ###################
 # Global variable #
 ###################
+my ($EXPORT_PRICESIZESTOCK_PROD_FILE)	= $CONSTANT::EXPORT_PRICESIZESTOCK_PROD_FILE;
+my ($IMPORT_PRICESIZESTOCK_PROD_FILE)	= $CONSTANT::IMPORT_PRICESIZESTOCK_PROD_FILE;
+my ($CHECK_SCRIPT_FILE)					= $CONSTANT::CHECK_SCRIPT_FILE;
+my ($CSVI_CRON_FILE)					= $CONSTANT::CSVI_CRON_FILE;
 
 #####################
 # Method prototypes #
@@ -23,14 +27,65 @@ use common;
 # Main subroutine
 sub main()
 {
-	# export products
+	# clear files
+	print "-- Clear cached files\n";
 	eval {
-		my ($cmd) = '/usr/local/bin/php5.5 /kunden/homepages/24/d406245370/htdocs/dev/administrator/components/com_csvi/helpers/cron.php username="josemrc" passwd="123.qwe" template_name="Export PriceSizeStock Products" > /dev/null 2>&1';
-		system($cmd);
+		my ($cmd) = "rm -rf $EXPORT_PRICESIZESTOCK_PROD_FILE";
+		print "-- -- $cmd\n";		
+		#system($cmd);
 	};
 	if ( $@ ) {
-		print STDERR "Exporting products\n";
+		print "ERROR: Deleting exported files\n";
 		exit 1;
+	}
+	eval {
+		my ($cmd) = "rm -rf $IMPORT_PRICESIZESTOCK_PROD_FILE";
+		print "-- -- $cmd\n";
+		#system($cmd);
+	};
+	if ( $@ ) {
+		print "ERROR: Deleting imported files\n";
+		exit 1;
+	}
+	
+	# export products
+	print "-- Export products\n";
+	eval {
+		my ($cmd) = "/usr/local/bin/php5.5 $CSVI_CRON_FILE username=\"josemrc\" passwd=\"123.qwe\" template_name=\"Export PriceSizeStock Products\" > /dev/null 2>&1";
+		print "-- -- $cmd\n";		
+		#system($cmd);
+	};
+	if ( $@ ) {
+		print "ERROR: Exporting products\n";
+		exit 1;
+	}
+	
+	# check price/size/stock of products
+	print "-- Check price/size/stock products\n";
+	if ( -e $EXPORT_PRICESIZESTOCK_PROD_FILE and (-s $EXPORT_PRICESIZESTOCK_PROD_FILE > 0) ) {
+		eval {
+			my ($cmd) = "perl $CHECK_SCRIPT_FILE $EXPORT_PRICESIZESTOCK_PROD_FILE";
+			print "-- -- $cmd\n";		
+			#system($cmd);
+		};
+		if ( $@ ) {
+			print "ERROR: Deleting imported files\n";
+			exit 1;
+		}
+	}
+	
+	# import products
+	print "-- Import products\n";
+	if ( -e $IMPORT_PRICESIZESTOCK_PROD_FILE and (-s $IMPORT_PRICESIZESTOCK_PROD_FILE > 0) ) {	
+		eval {
+			my ($cmd) = "/usr/local/bin/php5.5 $CSVI_CRON_FILE username=\"josemrc\" passwd=\"123.qwe\" template_name=\"Import PriceSizeStock Products\" > /dev/null 2>&1";
+			print "-- -- $cmd\n";		
+			#system($cmd);
+		};
+		if ( $@ ) {
+			print "ERROR: Importing products\n";
+			exit 1;
+		}
 	}
 	
 	exit 0;
