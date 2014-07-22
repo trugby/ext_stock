@@ -14,28 +14,21 @@ use sportdirect;
 ###################
 # Global variable #
 ###################
-my ($GOOGLE_FILE)			= $CONSTANT::GD_FILE;
-my ($MAIN_LANG)				= $CONSTANT::MAIN_LANG;
 my ($LANGUAGES)				= $CONSTANT::LANGUAGES;
 my ($SHOPS)					= $CONSTANT::SHOPS;
 my ($SHOP_TMP_DIR)			= $CONSTANT::SHOP_TMP_DIR;
 my ($SHOP_PROD_IMG_DIR)		= $CONSTANT::SHOP_PROD_IMG_DIR;				
 my ($IMPORT_EXT_PROD_FILE)	= $CONSTANT::IMPORT_EXT_PROD_FILE;
 
+my ($EMAILS_FROM)			= $CONSTANT::EMAILS_FROM;
+my ($EMAILS_TO)				= $CONSTANT::EMAILS_TO;
+my ($EMAILS_INSERT_SUBJECT)	= $CONSTANT::EMAILS_INSERT_SUBJECT;
+
 # Input parameters
-my ($intype) = $ARGV[0];
-my ($infile) = 'kk'; #$CONSTANT::GD_FILE2; # by default
-unless ( defined $infile and defined $intype ) {
+my ($INIT_EXT_FILE) = $ARGV[0];
+unless ( defined $INIT_EXT_FILE  ) {
 	print `perldoc $0`;
 	exit 1;
-}
-else {
-	if ( $intype eq 'google' ) {
-		$infile = $GOOGLE_FILE;
-	}
-	else {
-		$infile = $intype;
-	}
 }
 
 #####################
@@ -70,7 +63,7 @@ sub main()
 		auto_diag => 1,
 		sep_char  => ','    # not really needed as this is the default
 	});
-	open( my $fh, "<:encoding(utf8)", $infile ) or die "$infile: $!";
+	open( my $fh, "<:encoding(utf8)", $INIT_EXT_FILE ) or die "$INIT_EXT_FILE: $!";
 	while ( my $row = $csv->getline( $fh ) ) {
 		# "sku", "category_path", "link_en","link_es","link_pt"
 		if ( scalar(@{$row}) >= 4 ) {
@@ -104,9 +97,9 @@ sub main()
 				
 				print "### checking $shop_name\n";
 				my ($logger,$o_report) = sportdirect::down_product($i_prod);
-#print STDERR "\n\n\n";
-#print STDERR "LOGGER:\n".Dumper($logger)."\n";
-#print STDERR "RESULTS:\n".Dumper($o_report)."\n";
+print STDERR "\n\n\n";
+print STDERR "LOGGER:\n".Dumper($logger)."\n";
+print STDERR "RESULTS:\n".Dumper($o_report)."\n";
 				if ( $logger->{'error'} == 1 ) {
 					print "ERROR!!! ".$logger->{'log'}."\n\n\n";
 					next; # jump to the next product
@@ -117,7 +110,9 @@ sub main()
 				}
 				if ( defined $o_report ) {
 					foreach my $lang (@{$LANGUAGES}) {
-						$o_reports->{$lang} .= $o_report->{$lang};						
+						if ( exists $o_report->{$lang} and ($o_report->{$lang} ne '') ) {
+							$o_reports->{$lang} .= $o_report->{$lang};	
+						}
 					}
 				}
 			}
@@ -144,7 +139,7 @@ sub main()
 		# create update file
 		print "## printing files\n";
 #print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
-		my ($import_prod_files) = sportdirect::print_down_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
+		my ($import_prod_files) = sportdirect::print_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
 		unless (defined $import_prod_files and ($import_prod_files ne '') ) {
 			print "ERROR!!! Printing files\n";
 		}
@@ -152,7 +147,7 @@ sub main()
 		my ($import_files) = join(';',$import_prod_files);
 		print "## sending files: $import_files\n";
 		if ( defined $import_files ) {
-			common::send_email($e_message, $import_files);
+			common::send_email($EMAILS_FROM, $EMAILS_TO, $EMAILS_INSERT_SUBJECT, $e_message, $import_files);
 		}
 	}	
 
@@ -166,23 +161,21 @@ __END__
 
 =head1 NAME
 
-download_external
+download_external_products
 
 =head1 DESCRIPTION
 
-Script that check the stock given from an email. These items come from a list of online shops 
+Script that download the description and images of external products. These items come from a initial list. 
 
 =head1 ARGUMENTS
 
 =head2 Required arguments:
 	
-	<Type of input: google, or file that contains the clothes>
+	<Type of input: file that contains the clothes>
 
 =head1 EXAMPLE
 
-perl check_stock.pl google
-
-perl check_stock.pl clothes.txt
+perl download_external_products.pl initExtStock.csv
 
 =head1 AUTHOR
 

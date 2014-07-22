@@ -28,10 +28,6 @@ use vars qw(@ISA @EXPORT);
 # Global variable #
 ###################
 my ($SHOP_COOKIES)		= $CONSTANT::SHOP_COOKIES;
-my ($EMAILS_FROM)		= $CONSTANT::EMAILS_FROM;
-my ($EMAILS_TO)			= $CONSTANT::EMAILS_TO;
-my ($EMAILS_SUBJECT)	= $CONSTANT::EMAILS_SUBJECT;
-
 
 #####################
 # Method prototypes #
@@ -42,7 +38,7 @@ sub open_file($);
 sub rm_file($);
 sub open_web_file($);
 sub get_cookies($);
-sub send_email($$);
+sub send_email($$$$;$);
 
 #################
 # Method bodies #
@@ -150,18 +146,18 @@ sub save_cookies($)
 	return $cookies;
 }
 
-sub send_email($$)
+sub send_email($$$$;$)
 {
-	my ($txt, $files) = @_;
+	my ($from, $to, $subject, $content, $files) = @_;
 
-	# Part using which the attachment is sent to an email #
-	my ($text) = "Message control:\n\n".$txt;
+	# Part using which the attachment is sent to an email
 	my ($msg) = MIME::Lite->new(
-        From     	=> $EMAILS_FROM,
-        To 			=> $EMAILS_TO,
-        Subject 	=> $EMAILS_SUBJECT,
+        From     	=> $from,
+        To 			=> $to,
+        Subject 	=> $subject,
 		Type		=> 'multipart/mixed',
 	);
+	my ($text) = "Message control:\n\n".$content;
 	$msg->attach(
 		Type    	=> 'text/plain',
 		Encoding 	=> 'quoted-printable',
@@ -175,13 +171,7 @@ sub send_email($$)
 		);		
 	}
 	$msg->send;
-
-	# DEPRECATED:
-	#my ($cmd) = "echo '$msg' | mail -s '[Thinking Rugby] CHECKING THE STOCK' $EMAILS_TO";
-	#eval {
-	#	system($cmd);
-	#};
-	#return undef if ($@);
 }
+
 
 1;

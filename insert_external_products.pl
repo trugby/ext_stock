@@ -11,7 +11,12 @@ use common;
 ###################
 # Global variable #
 ###################
-my ($INIT_EXT_FILE)				= $CONSTANT::INIT_EXT_FILE;
+my ($INIT_EXT_FILE) = $ARGV[0];
+#my ($INIT_EXT_FILE)				= $CONSTANT::INIT_EXT_FILE;
+unless ( defined $INIT_EXT_FILE ) {
+	print `perldoc $0`;
+	exit 1;
+}
 my ($IMPORT_EXT_PROD_FILE)		= $CONSTANT::IMPORT_EXT_PROD_FILE;
 my ($DOWNN_SCRIPT_FILE)			= $CONSTANT::DOWNN_SCRIPT_FILE;
 my ($CSVI_CRON_FILE)			= $CONSTANT::CSVI_CRON_FILE;
@@ -85,7 +90,7 @@ __END__
 
 =head1 NAME
 
-update_external_products
+insert_external_products
 
 =head1 DESCRIPTION
 
@@ -95,11 +100,11 @@ Main script that update the price/size/stocj of external products
 
 =head2 Required arguments:
 	
-	<Type of input: google, or file that contains the clothes>
+	<Type of input: file that contains the initial links of products>
 
 =head1 EXAMPLE
 
-perl update_external_products.pl
+perl insert_external_products.pl initExtStock.csv
 
 =head1 AUTHOR
 

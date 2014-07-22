@@ -27,12 +27,14 @@ my ($MAIN_LANG)				= $CONSTANT::MAIN_LANG;
 # Method prototypes #
 #####################
 sub www_get($$);
-sub update_product($$$$$);
+sub update_product($);
+sub update_prod_wscan($\$);
 sub down_product($);
 sub down_prod_wscan($\$);
 sub down_prod_img(\$);
+sub print_update_prod($$);
 sub print_down_prod($$);
-sub print_down_prod_result($$);
+sub print_prod_result($$);
 
 
 #################
@@ -53,115 +55,6 @@ sub www_get($$)
 		return undef;
 	}
 	return $output;
-}
-
-sub update_product($$$$$)
-{
-	my ($name, $link, $i_published, $i_price, $i_sizes) = @_;
-	my ($report, $rst_published, $rst_price, $rst_tsizes, $rst_sizes) = ("# $name\n",$i_published,$i_price,'','');
-	my ($o_sizes);
-	my ($o_price);
-		
-	# get www content
-	my ($n) = $link; if ( $link =~ /\/([^\/]*)$/m ) { $n = $1 };	
-	my ($output) = $TMP_DIR."/".'update_product.'.$n."_".common::local_time;
-	$output = www_get($link, $output);
-	unless (defined $output ) {
-		$report = "Getting $link";
-		return $report;		
-	}
-	
-	# open file
-	my ($content) = common::open_file($output);
-	if ( defined $content and ($content ne '') ) {
-		my ($parser) = XML::LibXML->new( recover => 2 );
-		my ($doc) = $parser->load_html( location => $output );
-
-		# get sizes of website
-		for my $node ($doc->findnodes('//select[@id="sizeDdl"]')) {
-			for my $node2 ($node->findnodes('option[@value]')) {
-				unless ( $node2->hasAttribute('selected') ) {
-					#my ($text) = $node2->textContent();
-					my ($text) = $node2->getAttribute('value');
-					$text =~ s/\s*//g; $text = lc($text);
-					my ($conv_txt) = $CONV_SIZES->{$text};
-					$o_sizes->{$conv_txt} = 1;
-				}
-			}
-		}
-		# get price of website
-		for my $node ($doc->findnodes('//span[@id="lblSellingPrice"]')) {
-			my ($o_price_cont) = $node->textContent();
-			if ( $o_price_cont =~ /(\d{1,2},\d{1,2})/ ) {
-				$o_price = $1; $o_price =~ s/\s//g; $o_price =~ s/\,/./;
-			}
-		}
-
-		# compare the local values with the external values
-		if ( defined $o_price ) {
-			print "### External price: $o_price\n";
-			my ($c1) = '';
-			# turn all commas into dots
-			#$i_price = sprintf('%.2f',$i_price);
-			#$i_price =~ tr[,][.]d;
-			$i_price =~ s/\,/./;
-			$o_price = sprintf('%.2f',$o_price);
-			if ( $i_price < $o_price ) {
-					$c1 .= "## Local prices is smaller than external price.\n\t=> We will change the price from $i_price (local) to $o_price (external)";
-					$rst_price = $o_price;
-			}
-			elsif ( $i_price > $o_price ) {
-					$c1 .= "## Local prices is bigger than external price: $i_price (local) to $o_price (external).\n\t=> We will not modify the local price";
-			}
-			$report .= "$c1\n" if ($c1 ne '');
-		}
-		else {
-			$report .= "## We have not found the price.\n\t=> Product is unpublished\n";
-			$rst_published  = '0';
-		}
-		if ( defined $o_sizes ) {
-			print "### External sizes: ".join(" ",keys(%{$o_sizes}))."\n";
-			my ($c2) = '';
-			foreach my $s (keys(%{$i_sizes})) {
-				unless ( exists $o_sizes->{$s} ) {
-					$c2 .= "## Out of stock the following sizes: " if ($c2 eq '');		
-					$c2 .= "$s ";
-				}
-				else {
-					$rst_sizes .= $s.'~';
-					$rst_tsizes .= $SIZE_TITLE.'~';
-				}
-			}
-			my ($c3) = '';
-			foreach my $s (keys(%{$o_sizes})) {
-				unless ( exists $i_sizes->{$s} ) {
-					$c3 .= "## New sizes: " if ($c3 eq '');
-					$c3 .= "$s ";
-					$rst_sizes .= $s.'~';
-					$rst_tsizes .= $SIZE_TITLE.'~';
-				}
-			}
-			$report .= "$c2\n" if ($c2 ne '');
-			$report .= "$c3\n" if ($c3 ne '');				
-		}
-		else {
-			$report .= "## We have not found the sizes.\n\t=> Product is unpublished\n";
-			$rst_published = '0';				
-		}
-	}
-	else {
-		$report .= "## We have not found the product.\n\t=> Product is unpublished\n";
-		$rst_published = '0';
-	}
-	
-	# delete downloaded file
-	my ($rm_log) = common::rm_file($output);
-	unless (defined $rm_log) {
-		$report .= "Deleting FILE: $output ";
-	}
-	$rst_tsizes =~ s/\~$//g;
-	$rst_sizes =~ s/\~$//g;
-	return ($report, $rst_published, $rst_price, $rst_tsizes, $rst_sizes);
 }
 
 sub down_product($)
@@ -222,8 +115,6 @@ sub down_product($)
 				}
 			}
 			
-print STDERR "REPORT: \n".Dumper($o_report)."\n";
-
 			# delete downloaded file
 			my ($rm_log) = common::rm_file($output);
 			unless (defined $rm_log) {
@@ -237,6 +128,78 @@ print STDERR "REPORT: \n".Dumper($o_report)."\n";
 	return ($logger,$results);
 	
 } # end down_product
+
+sub update_product($)
+{
+	my ($i_prod) = @_;
+	my ($results);
+	my ($logger) = {
+		'error'		=> 0,
+		'warning'	=> 0,
+		'log'		=> '',
+	};
+	
+	my ($o_report);
+	my ($id) = $i_prod->{'id'};
+	my ($link) = $i_prod->{'link'};
+	my ($lang) = $MAIN_LANG;
+	my ($n) = $link; if ( $link =~ /\/([^\/]*)$/m ) { $n = $1 };
+	my ($output) = $TMP_DIR."/".'down_product_'.$lang.$n."_".common::local_time;
+	$output = www_get($link, $output);
+	unless (defined $output ) {
+		$logger->{'error'} 	= 1;
+		$logger->{'log'}	= "Getting $link";
+		return $logger;
+	}
+	else {
+		# build input report
+		my ($i_report) = {
+			'link'	=> $link,
+			'www'	=> $output,
+		};
+		$i_report->{'price'} = $i_prod->{'price'};
+		$i_report->{'sizes'} = $i_prod->{'sizes'};
+		$o_report->{'id'} = $id;
+		$o_report->{'link'} = $link;
+		$o_report->{'lang'} = $lang;
+					
+		# web scan
+		$logger = update_prod_wscan($i_report,$o_report);
+
+print STDERR "O_REP: \n".Dumper($o_report)."\n";
+
+		# create report rst
+		if ( $logger->{'error'} == 0 ) {
+			my ($txt) = print_update_prod($lang, $o_report);
+print STDERR "O_TXT: \n$txt\n";
+			if ( defined $txt ) {
+				$results->{$lang} = $txt;
+			}
+			else {
+				$logger->{'error'} 	= 1;
+				$logger->{'log'}	= "Printing product";
+				return $logger;
+			}
+		}
+			
+		# delete downloaded file
+		my ($rm_log) = common::rm_file($output);
+		unless (defined $rm_log) {
+			$logger->{'error'} 	= 1;
+			$logger->{'log'}	= "Deleting $link";
+			return $logger;
+		}
+	}
+		
+	return ($logger,$results);
+	
+} # end update_product
+
+
+#----------------#
+# PARSER METHODS #
+#----------------#
+
 
 sub down_prod_wscan($\$)
 {
@@ -315,7 +278,7 @@ sub down_prod_wscan($\$)
 		my ($o_sizes);		
 		for my $node ($doc->findnodes('//select[@id="sizeDdl"]')) {
 			for my $node2 ($node->findnodes('option[@value]')) {
-				unless ( $node2->hasAttribute('selected') or $node2->hasAttribute('class') ) {
+				if ( !$node2->hasAttribute('class') and $node2->hasAttribute('value') and (defined $node2->getAttribute('value')) and ($node2->getAttribute('value') ne '') ) {
 					my ($text) = $node2->getAttribute('value');
 					$text =~ s/\s*//g; $text = lc($text);
 					if ( exists $CONV_SIZES->{$text} ) {
@@ -409,6 +372,119 @@ sub down_prod_img(\$)
 	return $logger;
 	
 } # end down_prod_img
+
+sub update_prod_wscan($\$)
+{
+	my ($i_report, $o_report) = @_;
+	my ($logger) = {
+		'error'		=> 0,
+		'warning'	=> 0,
+		'log'		=> '',
+	};
+	${$o_report}->{'published'} = '0';
+	
+	# open file
+	my ($content) = common::open_file($i_report->{'www'});
+	if ( defined $content and ($content ne '') ) {
+		my ($parser) = XML::LibXML->new( recover => 2 );
+		my ($doc) = $parser->load_html( location => $i_report->{'www'} );
+		
+		# get sizes of website
+		my ($o_sizes);
+		for my $node ($doc->findnodes('//select[@id="sizeDdl"]')) {
+			for my $node2 ($node->findnodes('option[@value]')) {
+				my ($text) = $node2->getAttribute('value');
+				if ( !$node2->hasAttribute('class') and $node2->hasAttribute('value') and (defined $node2->getAttribute('value')) and ($node2->getAttribute('value') ne '') ) {
+					my ($text) = $node2->getAttribute('value');
+					$text =~ s/\s*//g; $text = lc($text);
+					if ( exists $CONV_SIZES->{$text} ) {
+						my ($conv_txt) = $CONV_SIZES->{$text};
+						push(@{$o_sizes},$conv_txt);
+					}
+					else {
+						$logger->{'warning'} = 1;
+						$logger->{'log'}	.= "We don't find the size: $text\n";
+					}
+				}
+			}
+		}
+		${$o_report}->{'sizes'} = $o_sizes;
+		
+		# get price of website
+		my ($o_price) = '';		
+		for my $node ($doc->findnodes('//span[@id="lblSellingPrice"]')) {
+			my ($o_price_cont) = $node->textContent();
+			if ( $o_price_cont =~ /(\d{1,2},\d{1,2})/ ) {
+				$o_price = $1; $o_price =~ s/\s//g; $o_price =~ s/\,/./;
+			}
+		}
+		if ( defined $o_price and ($o_price ne '') ) {
+			${$o_report}->{'price'} = $o_price;
+		}
+		else {
+			$logger->{'warning'} = 1;
+			$logger->{'log'}	.= "## We have not found the price.\n\t=> Product is unpublished\n";
+			${$o_report}->{'published'} = '0';
+		}
+		
+		# compare the local values with the external values
+		if ( defined $o_price and ($o_price ne '') ) {
+			my ($i_price) = $i_report->{'price'};
+			# turn all commas into dots
+			#$i_price = sprintf('%.2f',$i_price);
+			#$i_price =~ tr[,][.]d;
+			$i_price =~ s/\,/./;
+			$o_price = sprintf('%.2f',$o_price);
+			if ( $i_price < $o_price ) {
+					$logger->{'warning'} = 1;
+					$logger->{'log'}	.= "## Local prices is smaller than external price.\n\t=> We will change the price from $i_price (local) to $o_price (external)\n";
+			}
+			elsif ( $i_price > $o_price ) {
+					$logger->{'warning'} = 1;
+					$logger->{'log'}	.= "## Local prices is bigger than external price: $i_price (local) to $o_price (external).\n\t=> We will not modify the local price\n";
+					${$o_report}->{'price'} = $i_price;
+			}
+		}
+		if ( defined $o_sizes and (scalar(@{$o_sizes}) > 0) ) {
+			my ($log_cont) = '';
+			my ($log_cont2) = '';
+			my (%o_map_sizes) = map { $_ => 1 } @{$o_sizes};
+			my (%i_map_sizes) = map { $_ => 1 } @{$i_report->{'sizes'}};			
+			foreach my $s (@{$i_report->{'sizes'}}) {
+				unless ( exists $o_map_sizes{$s} ) {
+					$log_cont .= "## Out of stock the following sizes: " if ($log_cont eq '');		
+					$log_cont .= "$s ";
+				}
+			}
+			my ($c3) = '';
+			foreach my $s (@{$o_sizes}) {
+				unless ( exists $i_map_sizes{$s} ) {
+					$log_cont2 .= "## New sizes: " if ($log_cont2 eq '');
+					$log_cont2 .= "$s ";
+				}
+			}
+			$logger->{'warning'} = 1;
+			$logger->{'log'}	.= "$log_cont\n";
+			$logger->{'log'}	.= "$log_cont2\n";					
+		}
+		else {
+			$logger->{'warning'} = 1;
+			$logger->{'log'}	.= "## We have not found any size.\n\t=> Product is unpublished\n";
+			${$o_report}->{'published'} = '0';
+		}
+	}
+	else {
+		$logger->{'warning'} = 1;
+		$logger->{'log'}	.= "## We have not found the product.\n\t=> Product is unpublished\n";
+		${$o_report}->{'published'} = '0';
+	}
+	return $logger;
+	
+} # end update_prod_wscan
+
+#---------------#
+# PRINT METHODS #
+#---------------#
 
 sub print_down_prod($$)
 {
@@ -551,7 +627,61 @@ sub print_down_prod($$)
 	
 } # end print_down_prod
 
-sub print_down_prod_result($$)
+sub print_update_prod($$)
+{
+	my ($lang, $o_report) = @_;
+	my ($published) = '0';
+	my ($id) = '';
+	my ($price) = '';
+	my ($cust_title) = '';
+	my ($cust_val) = '';
+	my ($cust_order) = '';
+	
+	if ( $lang eq $MAIN_LANG ) {
+
+		if ( exists $o_report->{'published'} and defined $o_report->{'published'} and ($o_report->{'published'} ne '') ) {
+			$published = $o_report->{'published'};
+		}
+		else { return undef } # required field
+
+		if ( exists $o_report->{'id'} and defined $o_report->{'id'} and ($o_report->{'id'} ne '') ) {
+			$id = $o_report->{'id'};
+		}
+		else { return undef } # required field
+
+		if ( exists $o_report->{'price'} and defined $o_report->{'price'} and ($o_report->{'price'} ne '') ) {
+			$price = $o_report->{'price'};
+		}
+		else { return undef } # required field
+		
+		if ( exists $o_report->{'sizes'} and defined $o_report->{'sizes'} and (scalar(@{$o_report->{'sizes'}}) > 0) ) {		
+			for (my $i = 0; $i < scalar(@{$o_report->{'sizes'}}); $i++) {
+				my ($sizes) = $o_report->{'sizes'}->[$i];
+				if ( defined $sizes and ($sizes ne '') ) {
+					$cust_title .= $SIZE_TITLE.'~';
+					$cust_val .= $sizes.'~';
+					my ($num) = $i+1;
+					$cust_order .= $num.'~';
+				}
+			}
+			$cust_title =~ s/\~$//g;
+			$cust_val =~ s/\~$//g;
+			$cust_order =~ s/\~$//g;
+		}
+		else { return undef } # required field
+	}
+	
+	my ($result) = 	'"'.$published.'",'.
+					'"'.$id.'",'.
+					'"'.$price.'",'.
+					'"'.$cust_title.'",'.
+					'"'.$cust_val.'",'.
+					'"'.$cust_order.'"'."\n";
+	return $result;
+	
+} # end print_update_prod
+
+sub print_prod_result($$)
 {
 	my ($results, $corefile) = @_;
 	my ($files) = '';
@@ -573,6 +703,6 @@ sub print_down_prod_result($$)
 	
 	return $files
 	
-} # end print_down_prod_result
+} # end print_prod_result
 
 1;
