@@ -54,15 +54,15 @@ $GD_FILE			= 'https://docs.google.com/uc?id=0Bw3YSiAszMkTaGpza1VLVEQzUzA&export=
 $MAIN_LANG			= 'en';
 $LANGUAGES			= ['en','es','pt'];
 
-#$SCRIPT_DIR			= '/kunden/homepages/24/d406245370/htdocs/scripts/ext_stock';
+#$SCRIPT_DIR			= '/kunden/homepages/24/d406245370/htdocs/scripts/stock';
 #$DATA_DIR			= '/kunden/homepages/24/d406245370/htdocs/data/stock';
-#$TMP_DIR			= '/kunden/homepages/24/d406245370/htdocs/tmp/external_stock';
-#$PRODUCT_IMG_DIR 	= '/kunden/homepages/24/d406245370/htdocs/images/stories/virtuemart/product';
-$SCRIPT_DIR			= '/Users/jmrodriguez/Google\ Drive/Stock/ext_stock';
+#$TMP_DIR			= '/kunden/homepages/24/d406245370/htdocs/tmp/stock';
+#$PRODUCT_IMG_DIR 	= '/kunden/homepages/24/d406245370/htdocs/prod/images/stories/virtuemart/product';
+$SCRIPT_DIR			= '/Users/jmrodriguez/Google\ Drive/Stock/stock';
 $DATA_DIR			= '/Users/jmrodriguez/tmp';
 $TMP_DIR			= '/Users/jmrodriguez/tmp';
 $PRODUCT_IMG_DIR 	= '/Users/jmrodriguez/tmp';
-$PRODUCT_IMG_PATH 	= 'images/stories/virtuemart/product';
+$PRODUCT_IMG_PATH 	= '';
 
 #$INIT_EXT_FILE			= $DATA_DIR.'/../initExtStock.csv'; # NOT USED
 $IMPORT_EXT_PROD_FILE	= $DATA_DIR.'/ImportExternalStock__LANG__.csv';
@@ -71,7 +71,7 @@ $IMPORT_PRICESIZESTOCK_PROD_FILE	= $DATA_DIR.'/ImportPriceSizeStockProducts.csv'
 
 $DOWNN_SCRIPT_FILE		= $SCRIPT_DIR.'/download_external_products.pl';
 $CHECK_SCRIPT_FILE		= $SCRIPT_DIR.'/check_external_stock.pl';
-$CSVI_CRON_FILE			= '/kunden/homepages/24/d406245370/htdocs/dev/administrator/components/com_csvi/helpers/cron.php';
+$CSVI_CRON_FILE			= '/kunden/homepages/24/d406245370/htdocs/prod/administrator/components/com_csvi/helpers/cron.php';
 
 ############################
 # GLOBAL VARIABLES OF SHOP #

@@ -32,7 +32,7 @@ sub update_prod_wscan($\$);
 sub down_product($);
 sub down_prod_wscan($\$);
 sub down_prod_img(\$);
-sub print_update_prod($$);
+sub print_update_prod($$$);
 sub print_down_prod($$);
 sub print_prod_result($$);
 
@@ -79,7 +79,7 @@ sub down_product($)
 		$output = www_get($link, $output);
 		unless (defined $output ) {
 			$logger->{'error'} 	= 1;
-			$logger->{'log'}	= "Getting $link";
+			$logger->{'log'}	= "Getting $link\n";
 			return $logger;
 		}
 		else {
@@ -110,7 +110,7 @@ sub down_product($)
 				}
 				else {
 					$logger->{'error'} 	= 1;
-					$logger->{'log'}	= "Printing product";
+					$logger->{'log'}	= "Printing product\n";
 					return $logger;
 				}
 			}
@@ -119,7 +119,7 @@ sub down_product($)
 			my ($rm_log) = common::rm_file($output);
 			unless (defined $rm_log) {
 				$logger->{'error'} 	= 1;
-				$logger->{'log'}	= "Deleting $link";
+				$logger->{'log'}	= "Deleting $link\n";
 				return $logger;
 			}
 		}
@@ -148,7 +148,7 @@ sub update_product($)
 	$output = www_get($link, $output);
 	unless (defined $output ) {
 		$logger->{'error'} 	= 1;
-		$logger->{'log'}	= "Getting $link";
+		$logger->{'log'}	= "Getting $link\n";
 		return $logger;
 	}
 	else {
@@ -165,19 +165,18 @@ sub update_product($)
 					
 		# web scan
 		$logger = update_prod_wscan($i_report,$o_report);
-
-print STDERR "O_REP: \n".Dumper($o_report)."\n";
+		
+print STDERR "O_REPORT: \n".Dumper($o_report)."\n";
 
 		# create report rst
 		if ( $logger->{'error'} == 0 ) {
-			my ($txt) = print_update_prod($lang, $o_report);
-print STDERR "O_TXT: \n$txt\n";
+			my ($txt) = print_update_prod($lang, $i_report, $o_report);
 			if ( defined $txt ) {
 				$results->{$lang} = $txt;
 			}
 			else {
 				$logger->{'error'} 	= 1;
-				$logger->{'log'}	= "Printing product";
+				$logger->{'log'}	= "Printing product\n";
 				return $logger;
 			}
 		}
@@ -186,7 +185,7 @@ print STDERR "O_TXT: \n$txt\n";
 		my ($rm_log) = common::rm_file($output);
 		unless (defined $rm_log) {
 			$logger->{'error'} 	= 1;
-			$logger->{'log'}	= "Deleting $link";
+			$logger->{'log'}	= "Deleting $link\n";
 			return $logger;
 		}
 	}
@@ -228,7 +227,7 @@ sub down_prod_wscan($\$)
 		}
 		else {
 			$logger->{'error'} 	= 1;
-			$logger->{'log'}	= "We don't find the product name";
+			$logger->{'log'}	= "We don't find the product name\n";
 			return $logger;
 		}		
 
@@ -263,7 +262,7 @@ sub down_prod_wscan($\$)
 		}
 		else {
 			$logger->{'error'} 	= 1;
-			$logger->{'log'}	= "We don't find the product description";
+			$logger->{'log'}	= "We don't find the product description\n";
 			return $logger;
 		}		
 		if ( defined $o_manu and ($o_manu ne '') ) {		
@@ -283,7 +282,6 @@ sub down_prod_wscan($\$)
 					$text =~ s/\s*//g; $text = lc($text);
 					if ( exists $CONV_SIZES->{$text} ) {
 						my ($conv_txt) = $CONV_SIZES->{$text};
-						#$o_sizes->{$conv_txt} = 1;
 						push(@{$o_sizes},$conv_txt);
 					}
 					else {
@@ -308,7 +306,7 @@ sub down_prod_wscan($\$)
 		}
 		else {
 			$logger->{'error'} 	= 1;
-			$logger->{'log'}	= "We don't find the product price";
+			$logger->{'log'}	= "We don't find the product price\n";
 			return $logger;
 		}
 		
@@ -335,7 +333,7 @@ sub down_prod_wscan($\$)
 	}
 	else {
 		$logger->{'warning'} = 1;
-		$logger->{'log'}	.= "## We have not found the product.\n\t=> Product is unpublished\n";
+		$logger->{'log'}	.= "## We have not found the product => Product is unpublished\n";
 		${$o_report}->{'published'} = '0';
 	}
 	return $logger;
@@ -381,7 +379,7 @@ sub update_prod_wscan($\$)
 		'warning'	=> 0,
 		'log'		=> '',
 	};
-	${$o_report}->{'published'} = '0';
+	${$o_report}->{'published'} = '1';
 	
 	# open file
 	my ($content) = common::open_file($i_report->{'www'});
@@ -423,7 +421,7 @@ sub update_prod_wscan($\$)
 		}
 		else {
 			$logger->{'warning'} = 1;
-			$logger->{'log'}	.= "## We have not found the price.\n\t=> Product is unpublished\n";
+			$logger->{'log'}	.= "We have not found the price => Product is unpublished\n";
 			${$o_report}->{'published'} = '0';
 		}
 		
@@ -437,11 +435,11 @@ sub update_prod_wscan($\$)
 			$o_price = sprintf('%.2f',$o_price);
 			if ( $i_price < $o_price ) {
 					$logger->{'warning'} = 1;
-					$logger->{'log'}	.= "## Local prices is smaller than external price.\n\t=> We will change the price from $i_price (local) to $o_price (external)\n";
+					$logger->{'log'}	.= "Local prices is smaller than external price => We will change the price from $i_price (local) to $o_price (external)\n";
 			}
 			elsif ( $i_price > $o_price ) {
-					$logger->{'warning'} = 1;
-					$logger->{'log'}	.= "## Local prices is bigger than external price: $i_price (local) to $o_price (external).\n\t=> We will not modify the local price\n";
+					$logger->{'warning'} = 0;
+					#$logger->{'log'}	.= "Local prices is bigger than external price: $i_price (local) to $o_price (external) => We will not modify the local price\n";
 					${$o_report}->{'price'} = $i_price;
 			}
 		}
@@ -452,30 +450,34 @@ sub update_prod_wscan($\$)
 			my (%i_map_sizes) = map { $_ => 1 } @{$i_report->{'sizes'}};			
 			foreach my $s (@{$i_report->{'sizes'}}) {
 				unless ( exists $o_map_sizes{$s} ) {
-					$log_cont .= "## Out of stock the following sizes: " if ($log_cont eq '');		
+					$log_cont .= "Out of stock the following sizes: " if ($log_cont eq '');		
 					$log_cont .= "$s ";
 				}
 			}
-			my ($c3) = '';
 			foreach my $s (@{$o_sizes}) {
 				unless ( exists $i_map_sizes{$s} ) {
-					$log_cont2 .= "## New sizes: " if ($log_cont2 eq '');
+					$log_cont2 .= "New sizes: " if ($log_cont2 eq '');
 					$log_cont2 .= "$s ";
 				}
 			}
-			$logger->{'warning'} = 1;
-			$logger->{'log'}	.= "$log_cont\n";
-			$logger->{'log'}	.= "$log_cont2\n";					
+			if ( $log_cont ne '' ) {
+				$logger->{'warning'} = 1;
+				$logger->{'log'}	.= "$log_cont\n";				
+			}
+			if ( $log_cont2 ne '' ) {
+				$logger->{'warning'} = 1;
+				$logger->{'log'}	.= "$log_cont2\n";
+			}					
 		}
 		else {
 			$logger->{'warning'} = 1;
-			$logger->{'log'}	.= "## We have not found any size.\n\t=> Product is unpublished\n";
+			$logger->{'log'}	.= "We have not found any size => Product is unpublished\n";
 			${$o_report}->{'published'} = '0';
 		}
 	}
 	else {
 		$logger->{'warning'} = 1;
-		$logger->{'log'}	.= "## We have not found the product.\n\t=> Product is unpublished\n";
+		$logger->{'log'}	.= "We have not found the product => Product is unpublished\n";
 		${$o_report}->{'published'} = '0';
 	}
 	return $logger;
@@ -627,9 +629,9 @@ sub print_down_prod($$)
 	
 } # end print_down_prod
 
-sub print_update_prod($$)
+sub print_update_prod($$$)
 {
-	my ($lang, $o_report) = @_;
+	my ($lang, $i_report, $o_report) = @_;
 	my ($published) = '0';
 	my ($id) = '';
 	my ($price) = '';
@@ -637,22 +639,22 @@ sub print_update_prod($$)
 	my ($cust_val) = '';
 	my ($cust_order) = '';
 	
+	if ( exists $o_report->{'published'} and defined $o_report->{'published'} and ($o_report->{'published'} ne '') ) {
+		$published = $o_report->{'published'};
+	}
+	else { return undef } # required field
+	
+	if ( exists $o_report->{'id'} and defined $o_report->{'id'} and ($o_report->{'id'} ne '') ) {
+		$id = $o_report->{'id'};
+	}
+	else { return undef } # required field
+
 	if ( $lang eq $MAIN_LANG ) {
-
-		if ( exists $o_report->{'published'} and defined $o_report->{'published'} and ($o_report->{'published'} ne '') ) {
-			$published = $o_report->{'published'};
-		}
-		else { return undef } # required field
-
-		if ( exists $o_report->{'id'} and defined $o_report->{'id'} and ($o_report->{'id'} ne '') ) {
-			$id = $o_report->{'id'};
-		}
-		else { return undef } # required field
 
 		if ( exists $o_report->{'price'} and defined $o_report->{'price'} and ($o_report->{'price'} ne '') ) {
 			$price = $o_report->{'price'};
 		}
-		else { return undef } # required field
+		else { $published = '0' }
 		
 		if ( exists $o_report->{'sizes'} and defined $o_report->{'sizes'} and (scalar(@{$o_report->{'sizes'}}) > 0) ) {		
 			for (my $i = 0; $i < scalar(@{$o_report->{'sizes'}}); $i++) {
@@ -668,7 +670,7 @@ sub print_update_prod($$)
 			$cust_val =~ s/\~$//g;
 			$cust_order =~ s/\~$//g;
 		}
-		else { return undef } # required field
+		else { $published = '0' }
 	}
 	
 	my ($result) = 	'"'.$published.'",'.

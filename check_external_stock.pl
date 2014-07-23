@@ -88,23 +88,24 @@ sub main()
 			if ( index($i_link, $shop_name) != -1 ) {
 				print "### checking $shop_name\n";
 				my ($logger,$o_report) = sportdirect::update_product($i_prod);
-print STDERR "\n\n\n";
-print STDERR "LOGGER:\n".Dumper($logger)."\n";
-print STDERR "RESULTS:\n".Dumper($o_report)."\n";
-				if ( $logger->{'error'} == 1 ) {
-					print "ERROR!!! ".$logger->{'log'}."\n\n\n";
-					next; # jump to the next product
-				}
-				if ( $logger->{'warning'} == 1 ) {
-					print "WARNING: ".$logger->{'log'}."\n";
-				
-				}
+#print STDERR "\n\n\n";
+#print STDERR "LOGGER:\n".Dumper($logger)."\n";
+#print STDERR "RESULTS:\n".Dumper($o_report)."\n";
 				if ( defined $o_report ) {
 					foreach my $lang (@{$LANGUAGES}) {
 						if ( exists $o_report->{$lang} and ($o_report->{$lang} ne '') ) {
 							$o_reports->{$lang} .= $o_report->{$lang};	
 						}
 					}
+				}
+				if ( $logger->{'error'} == 1 ) {
+					$e_message .= "# $i_id > $i_name [PROBLEMS]\n";
+					$e_message .= $logger->{'log'}."\n";
+					next; # jump to the next product
+				}
+				if ( $logger->{'warning'} == 1 ) {
+					$e_message .= "# $i_id > $i_name\n";
+					$e_message .= $logger->{'log'}."\n";
 				}
 			}
 			else {
