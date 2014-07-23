@@ -40,7 +40,7 @@ sub main()
 		$file =~ s/__LANG__/\*/;
 		my ($cmd) = "rm -rf $file";
 		print "-- -- $cmd\n";		
-		#system($cmd);
+		system($cmd);
 	};
 	if ( $@ ) {
 		print "ERROR: Deleting exported files\n";
@@ -53,7 +53,7 @@ sub main()
 		eval {
 			my ($cmd) = "perl $DOWNN_SCRIPT_FILE $INIT_EXT_FILE";
 			print "-- -- $cmd\n";		
-			#system($cmd);
+			system($cmd);
 		};
 		if ( $@ ) {
 			print "ERROR: Deleting imported files\n";
@@ -71,7 +71,7 @@ sub main()
 			eval {
 				my ($cmd) = "/usr/local/bin/php5.5 $CSVI_CRON_FILE username=\"josemrc\" passwd=\"123.qwe\" template_name=\"Import Ext Products $lan\" > /dev/null 2>&1";
 				print "-- -- $cmd\n";		
-				#system($cmd);
+				system($cmd);
 			};
 			if ( $@ ) {
 				print "ERROR: Importing products\n";

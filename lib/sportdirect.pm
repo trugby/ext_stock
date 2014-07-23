@@ -166,8 +166,6 @@ sub update_product($)
 		# web scan
 		$logger = update_prod_wscan($i_report,$o_report);
 		
-print STDERR "O_REPORT: \n".Dumper($o_report)."\n";
-
 		# create report rst
 		if ( $logger->{'error'} == 0 ) {
 			my ($txt) = print_update_prod($lang, $i_report, $o_report);

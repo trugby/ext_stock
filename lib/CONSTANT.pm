@@ -58,6 +58,7 @@ $LANGUAGES			= ['en','es','pt'];
 #$DATA_DIR			= '/kunden/homepages/24/d406245370/htdocs/data/stock';
 #$TMP_DIR			= '/kunden/homepages/24/d406245370/htdocs/tmp/stock';
 #$PRODUCT_IMG_DIR 	= '/kunden/homepages/24/d406245370/htdocs/prod/images/stories/virtuemart/product';
+#$PRODUCT_IMG_PATH 	= '';
 $SCRIPT_DIR			= '/Users/jmrodriguez/Google\ Drive/Stock/stock';
 $DATA_DIR			= '/Users/jmrodriguez/tmp';
 $TMP_DIR			= '/Users/jmrodriguez/tmp';
@@ -139,79 +140,6 @@ $SHOP_CONV_SIZES	= {
 		
 	},
 };
-#$SHOP_CONV_SIZES	= {
-#	'sportsdirect' => {
-#		'external_to_local'	=> {
-#					'junior'	=> 'XS',
-#					'extrasml'	=> 'XS',
-#					'small'		=> 'S',
-#					'medium'	=> 'M',
-#					'large'		=> 'L',
-#					'extralge'	=> 'XL',
-#					'xxlarge'	=> '2XL',
-#					'xxxlarge'	=> '3XL',
-#					'xxxxlarge'	=> '4XL',	
-#					'sml/med'	=> 'S/M',
-#					'lge/xlge'	=> 'L/XL',
-#					'10oz'		=> '10OZ',
-#					'12oz'		=> '12OZ',
-#					'14oz'		=> '14OZ',
-#					'16oz'		=> '16OZ',
-#					'6'			=> '6',
-#					'6.5'		=> '6.5',
-#					'7'			=> '7',
-#					'7.5'		=> '7.5',
-#					'8'			=> '8',
-#					'8.5'		=> '8.5',
-#					'9'			=> '9',
-#					'9.5'		=> '9.5',
-#					'10'		=> '10',
-#					'10.5'		=> '10.5',
-#					'11'		=> '11',
-#					'11.5'		=> '11.5',
-#					'12'		=> '12',
-#					'12.5'		=> '12.5',
-#					'13'		=> '13',
-#					'13.5'		=> '13.5',
-#		},
-#		'local_to_external'	=> {
-#					'XS'	=> ['junior', 'extrasml'],
-#					'S'		=> ['small'],
-#					'M'		=> ['medium'],
-#					'L'		=> ['large'],
-#					'XL'	=> ['extralge'],
-#					'2XL'	=> ['xxlarge'],
-#					'3XL'	=> ['xxxlarge'],
-#					'4XL'	=> ['xxxxlarge'],
-#					'S/M'	=> ['sml/med'],
-#					'L/XL'	=> ['lge/xlge'],
-#					'10OZ'	=> ['10oz'],
-#					'12OZ'	=> ['12oz'],
-#					'14OZ'	=> ['14oz'],
-#					'16OZ'	=> ['16oz'],
-#					'16OZ'	=> ['16oz'],
-#					'6'		=> ['6'],
-#					'6.5'	=> ['6.5'],
-#					'7'		=> ['7'],
-#					'7.5'	=> ['7.5'],
-#					'8'		=> ['8'],
-#					'8.5'	=> ['8.5'],
-#					'9'		=> ['9'],
-#					'9.5'	=> ['9.5'],
-#					'10'	=> ['10'],
-#					'10.5'	=> ['10.5'],
-#					'11'	=> ['11'],
-#					'11.5'	=> ['11.5'],
-#					'12'	=> ['12'],
-#					'12.5'	=> ['12.5'],
-#					'13'	=> ['13'],
-#					'13.5'	=> ['13.5'],
-#		}
-#	},
-#	'lovell-rugby' => {
-#		
-#	},
-#};
 
 $SIZE_TITLE = 'Tallas / Sizes';
 

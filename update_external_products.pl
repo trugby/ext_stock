@@ -32,7 +32,7 @@ sub main()
 	eval {
 		my ($cmd) = "rm -rf $EXPORT_PRICESIZESTOCK_PROD_FILE";
 		print "-- -- $cmd\n";		
-		#system($cmd);
+		system($cmd);
 	};
 	if ( $@ ) {
 		print "ERROR: Deleting exported files\n";
@@ -41,7 +41,7 @@ sub main()
 	eval {
 		my ($cmd) = "rm -rf $IMPORT_PRICESIZESTOCK_PROD_FILE";
 		print "-- -- $cmd\n";
-		#system($cmd);
+		system($cmd);
 	};
 	if ( $@ ) {
 		print "ERROR: Deleting imported files\n";
@@ -53,7 +53,7 @@ sub main()
 	eval {
 		my ($cmd) = "/usr/local/bin/php5.5 $CSVI_CRON_FILE username=\"josemrc\" passwd=\"123.qwe\" template_name=\"Export PriceSizeStock Products\" > /dev/null 2>&1";
 		print "-- -- $cmd\n";		
-		#system($cmd);
+		system($cmd);
 	};
 	if ( $@ ) {
 		print "ERROR: Exporting products\n";
@@ -66,7 +66,7 @@ sub main()
 		eval {
 			my ($cmd) = "perl $CHECK_SCRIPT_FILE $EXPORT_PRICESIZESTOCK_PROD_FILE";
 			print "-- -- $cmd\n";		
-			#system($cmd);
+			system($cmd);
 		};
 		if ( $@ ) {
 			print "ERROR: Deleting imported files\n";
@@ -80,7 +80,7 @@ sub main()
 		eval {
 			my ($cmd) = "/usr/local/bin/php5.5 $CSVI_CRON_FILE username=\"josemrc\" passwd=\"123.qwe\" template_name=\"Import PriceSizeStock Products\" > /dev/null 2>&1";
 			print "-- -- $cmd\n";		
-			#system($cmd);
+			system($cmd);
 		};
 		if ( $@ ) {
 			print "ERROR: Importing products\n";

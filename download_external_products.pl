@@ -141,7 +141,6 @@ sub main()
 		
 		# create update file
 		print "## printing files\n";
-#print STDERR "RESULTS:\n".Dumper($o_reports)."\n";
 		my ($import_prod_files) = sportdirect::print_prod_result($o_reports, $IMPORT_EXT_PROD_FILE);
 		unless (defined $import_prod_files and ($import_prod_files ne '') ) {
 			print "ERROR!!! Printing files\n";
